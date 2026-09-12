@@ -6,6 +6,10 @@ A story-driven quest system for low-pop Rust servers. Four named traders live in
 
 **Status: v3 — v1 (the four chains), v2 (the per-wipe story generator, verdicts included), and v3 (the traders speak) complete.** History in [CHANGELOG.md](CHANGELOG.md).
 
+<!-- lpl:links -->
+**[Download v2.20.3](https://github.com/lowpoplabs/RustQuests/releases/latest)** · **Flyer:** [web](https://lowpoplabs.github.io/flyers/RustQuests.html) / [PDF](RustQuests-Flyer.pdf) · **[Changelog](CHANGELOG.md)** · **[Ko-fi](https://ko-fi.com/lowpoplabs)**
+<!-- /lpl:links -->
+
 ## What it does
 
 - **Four traders with identities** — Sonia (jungle, hunting), Rebecca (temperate, farming/electrics), Alexa (arid, vehicles), Olivia (arctic, munitions). Each stands in the cashier booth of her own hidden caboose: fixed face, authored outfit and dialog, a chain of quests in her own register, and a shop that re-hides itself in her biome every wipe. They're a **chain, not a menu** — each trader must vouch for you before the next offers work, and the cross-trader vault finale needs all four chains done.
