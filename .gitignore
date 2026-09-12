@@ -1,0 +1,20 @@
+# Third-party 7DTD mods kept for character reference only (decision 0001) —
+# 468 MB of .unity3d bundles that are not source and not portable to Rust.
+/7DTD Traders/
+
+# Personal Claude Code settings
+.claude/settings.local.json
+
+scratch/
+*.tmp
+
+# Scrubbed share bundles (pii-scrub output packaged for friends) — deploy
+# artifacts, not source; the dated name pattern covers future bundles too.
+/LowPopLabs-*
+
+# Built extension DLL (build.sh output) — the source lives in voice-ext/.
+/voice-ext/Oxide.Ext.RustQuestsVoice.dll
+
+# uMod's submission guidelines, kept locally for reference — not ours to ship.
+/uMod Guidelines.txt
+releases/

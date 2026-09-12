@@ -1,0 +1,46 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  html,body{margin:0;width:854px;height:480px;overflow:hidden;background:#eae7dd;}
+  body{font-family:'Courier New',monospace;color:#17140f;position:relative;}
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:repeating-linear-gradient(2deg,transparent 0 3px,rgba(0,0,0,.03) 3px 4px);}
+  .kicker{margin:34px 0 0;text-align:center;font-size:19px;letter-spacing:.14em;}
+  h1{font-family:Impact,'Arial Black',sans-serif;font-size:76px;margin:2px 0 0;text-align:center;transform:rotate(.6deg);}
+  .cols{display:flex;gap:30px;margin:20px 54px 0;font-size:18.5px;line-height:1.55;}
+  .cols div{flex:1;}
+  b{background:#17140f;color:#eae7dd;padding:0 5px;}
+  .redact{background:#17140f;color:#17140f;padding:0 8px;}
+  .foot{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:16px;letter-spacing:.06em;}
+  .safe{position:absolute;left:0;top:0;width:854px;height:480px;transform:scale(.72);transform-origin:50% 50%;}
+  .dirt{position:absolute;left:0;top:0;width:854px;height:480px;pointer-events:none;mix-blend-mode:multiply;
+    background:
+      radial-gradient(120% 95% at 50% 45%, rgba(58,45,26,0) 48%, rgba(58,45,26,.55) 100%),
+      radial-gradient(230px 170px at 10% 90%, rgba(88,66,36,.34), transparent 70%),
+      radial-gradient(270px 190px at 90% 8%, rgba(88,66,36,.30), transparent 70%),
+      radial-gradient(170px 130px at 76% 84%, rgba(104,80,42,.26), transparent 70%),
+      radial-gradient(210px 150px at 28% 6%, rgba(76,58,32,.22), transparent 70%),
+      radial-gradient(90px 60px at 55% 30%, rgba(90,70,40,.18), transparent 70%),
+      linear-gradient(rgba(122,96,56,.42), rgba(122,96,56,.42));}
+</style></head><body>
+  <div class="safe">
+  <div class="kicker">STILL WAITING ON YOUR LAST CHECK?</div>
+  <h1>JOIN THE UNPAID</h1>
+  <div class="cols">
+    <div>
+      WE OFFER:<br>
+      » No wages. You're used to that.<br>
+      » Tools, when we have them.<br>
+      » The recipe for getting even.<br>
+      » Somebody watching your back who <b>isn't invoiced for it</b>.
+    </div>
+    <div>
+      MEETINGS: <span class="redact">when it rains</span><br>
+      WHERE: <span class="redact">you know the place</span><br>
+      BRING: what you scavenge, what you heard, whoever you trust.<br>
+      DON'T BRING: <b>a Cobalt badge.</b>
+    </div>
+  </div>
+  <div class="foot">If you can read this, you're already a member. Sorry. That's how it works.</div>
+  </div>
+  <div class="grain"></div>
+  <div class="dirt"></div>
+</body></html>
