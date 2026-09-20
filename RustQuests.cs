@@ -10,7 +10,7 @@ using UnityEngine.AI;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Quests", "LowPopLabs", "2.20.3")]
+    [Info("Rust Quests", "LowPopLabs", "2.20.4")]
     [Description("Story-driven quests: hidden trader shops, lore notes, puzzles and hunting chains that change each wipe.")]
     public class RustQuests : RustPlugin
     {
@@ -848,6 +848,15 @@ namespace Oxide.Plugins
             // explicit biome replaces it, otherwise she lands anywhere.
             if (target.Biome == "any" && !string.IsNullOrEmpty(def.Biome) && def.Biome != "any") { target.Biome = def.Biome; n++; }
             if (string.IsNullOrEmpty(target.ShopName) && !string.IsNullOrEmpty(def.ShopName)) { target.ShopName = def.ShopName; n++; }
+            // All-zero booth offsets were never calibrated (the prefab pivot is
+            // under the floor, never a real stand-point) — take the shipped
+            // calibration. Any non-zero value is an operator's rq.shop.offset and stays.
+            if (target.TraderOffsetX == 0f && target.TraderOffsetY == 0f && target.TraderOffsetZ == 0f && target.TraderYawOffset == 0f
+                && (def.TraderOffsetX != 0f || def.TraderOffsetY != 0f || def.TraderOffsetZ != 0f || def.TraderYawOffset != 0f))
+            {
+                target.TraderOffsetX = def.TraderOffsetX; target.TraderOffsetY = def.TraderOffsetY;
+                target.TraderOffsetZ = def.TraderOffsetZ; target.TraderYawOffset = def.TraderYawOffset; n++;
+            }
             return n;
         }
 
@@ -856,6 +865,12 @@ namespace Oxide.Plugins
         // traders.json (2026-08-31): Workshop skins via shortname@skinid, the
         // balaclava skins are the hair. Skin creators credited in README.md.
         private const ulong TraderFaceSeed = 76561198714518433UL;
+        // Booth stand-point inside the static caboose, relative to the prefab
+        // origin (its pivot sits ~1.4 m under the floor, ~6 m from the booth).
+        // Calibrated live with rq.shop.offset (2026-07); back-ported 2.20.4 —
+        // before that a fresh install shipped all-zero offsets, which put every
+        // trader at the pivot, i.e. UNDER her caboose (a public-release report).
+        private const float BoothOffsetX = 1.00f, BoothOffsetY = 1.44f, BoothOffsetZ = -5.99f, BoothYawOffset = -89f;
 
         // Shipped traders. Outfits/faces are starting points — tune live with
         // rq.trader.face / traders.json, and rq.shop.offset for the booth spot.
@@ -870,6 +885,8 @@ namespace Oxide.Plugins
                 ShopName = "Sonia's Supplies",
                 Kit = new List<string> { "shirt.tanktop@805920755", "pants@899216250", "mask.balaclava@2879706650" },
                 FaceSeed = TraderFaceSeed,
+                TraderOffsetX = BoothOffsetX, TraderOffsetY = BoothOffsetY, TraderOffsetZ = BoothOffsetZ,
+                TraderYawOffset = BoothYawOffset,
                 // The one door already open — every wipe starts at her counter.
                 RequiresTrader = "",
                 UnlockQuest = "",
@@ -902,6 +919,8 @@ namespace Oxide.Plugins
                 ShopName = "Olivia's Foundry",
                 Kit = new List<string> { "shirt.tanktop@805920497", "pants@835246371", "mask.balaclava@2879706650", "jacket@3332279029" },
                 FaceSeed = TraderFaceSeed,
+                TraderOffsetX = BoothOffsetX, TraderOffsetY = BoothOffsetY, TraderOffsetZ = BoothOffsetZ,
+                TraderYawOffset = BoothYawOffset,
                 // Last of the four — Alexa's finale is what gets you in the door.
                 RequiresTrader = "alexa",
                 UnlockQuest = "alexa_finale",
@@ -934,6 +953,8 @@ namespace Oxide.Plugins
                 ShopName = "Alexa's Garage",
                 Kit = new List<string> { "shirt.tanktop@2643203649", "pants@1402353612", "mask.balaclava@2879464636" },
                 FaceSeed = TraderFaceSeed,
+                TraderOffsetX = BoothOffsetX, TraderOffsetY = BoothOffsetY, TraderOffsetZ = BoothOffsetZ,
+                TraderYawOffset = BoothYawOffset,
                 RequiresTrader = "rebecca",
                 UnlockQuest = "rebecca_finale",
                 ChainFinaleQuest = "alexa_finale",
@@ -964,6 +985,8 @@ namespace Oxide.Plugins
                 ShopName = "Rebecca's Homestead",
                 Kit = new List<string> { "shirt.tanktop@2548737618", "pants@829596538", "mask.balaclava@2879714377" },
                 FaceSeed = TraderFaceSeed,
+                TraderOffsetX = BoothOffsetX, TraderOffsetY = BoothOffsetY, TraderOffsetZ = BoothOffsetZ,
+                TraderYawOffset = BoothYawOffset,
                 RequiresTrader = "sonia",
                 UnlockQuest = "sonia_finale",
                 ChainFinaleQuest = "rebecca_finale",

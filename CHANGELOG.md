@@ -2,6 +2,12 @@
 
 All notable changes to RustQuests. Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versions before the first public release (2.20.3) were internal milestones.
 
+## [2.20.4] — 2026-09-19 — traders stand in their booths on a fresh install
+
+### Fixed
+- **Traders spawned under their cabooses on a fresh install** (first public-release bug report). The booth stand-point is stored per trader as an offset from the caboose prefab origin, and the shipped defaults never set it: every new `traders.json` got all-zero offsets, which is the prefab pivot, about 1.4 m below the floor and 6 m from the booth. The live-calibrated offsets (`rq.shop.offset`, July 2026) are now the shipped defaults, the same back-port 2.20.1 did for the outfits.
+- Existing installs self-heal: the trader merge now treats all-zero offsets as "never calibrated" and fills the shipped values (the pivot is never a real stand-point, so nothing tuned is touched; any non-zero operator calibration stays). Deploy the .cs and run `rq.trader.reload`, or restart, and she climbs into the booth.
+
 ## [2.20.3 + RustQuestsVoice 1.3.1] — 2026-09-12 — first public release
 
 First public release on GitHub — no gameplay changes.
