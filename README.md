@@ -7,7 +7,7 @@ A story-driven quest system for low-pop Rust servers. Four named traders live in
 **Status: v3 — v1 (the four chains), v2 (the per-wipe story generator, verdicts included), and v3 (the traders speak) complete.** History in [CHANGELOG.md](CHANGELOG.md).
 
 <!-- lpl:links -->
-**[Download v2.20.3](https://github.com/lowpoplabs/RustQuests/releases/latest)** · **Flyer:** [web](https://lowpoplabs.github.io/flyers/RustQuests.html) / [PDF](RustQuests-Flyer.pdf) · **[Changelog](CHANGELOG.md)** · **[Ko-fi](https://ko-fi.com/lowpoplabs)**
+**[Download v2.20.4](https://github.com/lowpoplabs/RustQuests/releases/latest)** · **Flyer:** [web](https://lowpoplabs.github.io/flyers/RustQuests.html) / [PDF](RustQuests-Flyer.pdf) · **[Changelog](CHANGELOG.md)** · **[Ko-fi](https://ko-fi.com/lowpoplabs)**
 <!-- /lpl:links -->
 
 ## What it does
