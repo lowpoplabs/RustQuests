@@ -2,6 +2,11 @@
 
 All notable changes to RustQuests. Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versions before the first public release (2.20.3) were internal milestones.
 
+## [2.20.5] — 2026-09-27 — admin guide
+
+### Added
+- **`RustQuests-Admin-Guide.pdf`** ships in the release zip: how the quest system works (traders, the chain, quest states and objective types), how the storylines work (the wipe bible, the six templates, roles and secrets, beats, the verdict, grudges, delayed mail, the collections crew, The Unpaid), wipes and season carry-over, the optional chat and voice companions, data files and the sync commands, an admin command reference, and a troubleshooting table. No code changes.
+
 ## [2.20.4] — 2026-09-19 — traders stand in their booths on a fresh install
 
 ### Fixed

@@ -10,7 +10,7 @@ using UnityEngine.AI;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Quests", "LowPopLabs", "2.20.4")]
+    [Info("Rust Quests", "LowPopLabs", "2.20.5")]
     [Description("Story-driven quests: hidden trader shops, lore notes, puzzles and hunting chains that change each wipe.")]
     public class RustQuests : RustPlugin
     {

@@ -31,7 +31,7 @@ A story-driven quest system for low-pop Rust servers. Four named traders live in
 
 ## Install
 
-Drop `RustQuests.cs` into `oxide/plugins/`, then copy the pamphlet JPGs into `oxide/data/RustQuests/pamphlets/`. On first load the plugin writes its config and all content files; after a map wipe it rolls the wipe's story and places every shop, stash, and note by itself.
+Drop `RustQuests.cs` into `oxide/plugins/`, then copy the pamphlet JPGs into `oxide/data/RustQuests/pamphlets/`. The release zip also carries `RustQuests-Admin-Guide.pdf`, a walkthrough of how the quest system and the storylines work, for whoever runs the server. On first load the plugin writes its config and all content files; after a map wipe it rolls the wipe's story and places every shop, stash, and note by itself.
 
 **Voice (optional):** copy `Oxide.Ext.RustQuestsVoice.dll` into `RustDedicated_Data/Managed/` and **restart** (extensions load at boot only), drop `RustQuestsVoice.cs` into `oxide/plugins/`, then set `TTSEndpoint` (plus `TTSApiKey`/`TTSModel`/`TTSFormat` for hosted endpoints — the config's own key text carries the exact local and OpenRouter values) in `oxide/config/RustQuestsVoice.json`.
 
