@@ -10,7 +10,7 @@ using UnityEngine.AI;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Quests", "LowPopLabs", "2.20.5")]
+    [Info("Rust Quests", "LowPopLabs", "2.20.6")]
     [Description("Story-driven quests: hidden trader shops, lore notes, puzzles and hunting chains that change each wipe.")]
     public class RustQuests : RustPlugin
     {
@@ -3513,10 +3513,36 @@ namespace Oxide.Plugins
         // pump), stripped of everything the visit doesn't need: no loot
         // states, no patrol economy, target assigned rather than sensed.
 
-        // agentTypeID of the navmesh surface that answers typed queries at
-        // off-monument terrain ('Animal' on the live server — never
+        // ---- Navmesh shim (Facepunch's Livestock update, 2026-10-01) ----
+        // RustNav (Facepunch's own Recast mesh) is the server default on that
+        // build and the Unity navmesh is no longer baked (-useOldNavmesh
+        // restores it), so every UnityEngine.AI.NavMesh.* static call answers
+        // nothing map-wide — the crew's spawn ring found "no ground" every
+        // night. RustNavMeshHelpers dispatches to whichever mesh the server
+        // booted with, so every static query goes through here. Agent-typed
+        // queries (the Animal/Humanoid bakes) are a Unity concept: RustNav is
+        // one untyped surface for terrain, monuments and buildings, so the
+        // typed overload drops the filter there. allowNpcDoors=false keeps
+        // closed doors solid (the stakeout doctrine never paths into a base).
+        private static bool UnityNavmesh => ConVar.AI.useUnityNavmesh;
+
+        private static bool NavSample(Vector3 pos, out NavMeshHit hit, float maxDistance)
+        {
+            return Rust.Ai.Gen2.RustNavMeshHelpers.SamplePosition(pos, out hit, maxDistance, Rust.Ai.Gen2.RustNavMeshHelpers.AllAreas, false);
+        }
+
+        private static bool NavSampleTyped(Vector3 pos, out NavMeshHit hit, float maxDistance, NavMeshQueryFilter filter)
+        {
+            if (UnityNavmesh) return NavMesh.SamplePosition(pos, out hit, maxDistance, filter);
+            return NavSample(pos, out hit, maxDistance);
+        }
+
+        // agentTypeID of the Unity navmesh surface that answers typed queries
+        // at off-monument terrain ('Animal' on the live server — never
         // hardcode; the Humanoid bake exists only inside monuments). Probed
-        // once per session; visits are off-monument by design.
+        // once per session; visits are off-monument by design. Under RustNav
+        // there are no typed surfaces: stays int.MinValue and the typed
+        // sampler ignores the filter.
         private static int _terrainAgentTypeId = int.MinValue;
         private static bool _terrainAgentTypeProbed;
 
@@ -3524,12 +3550,13 @@ namespace Oxide.Plugins
         {
             if (_terrainAgentTypeProbed) return _terrainAgentTypeId;
             _terrainAgentTypeProbed = true;
+            if (!UnityNavmesh) return _terrainAgentTypeId;
             for (var i = 0; i < NavMesh.GetSettingsCount(); i++)
             {
                 var s = NavMesh.GetSettingsByIndex(i);
                 var filter = new NavMeshQueryFilter { agentTypeID = s.agentTypeID, areaMask = NavMesh.AllAreas };
                 NavMeshHit hit;
-                if (NavMesh.SamplePosition(near, out hit, 6f, filter)) { _terrainAgentTypeId = s.agentTypeID; break; }
+                if (NavSampleTyped(near, out hit, 6f, filter)) { _terrainAgentTypeId = s.agentTypeID; break; }
             }
             return _terrainAgentTypeId;
         }
@@ -3584,28 +3611,40 @@ namespace Oxide.Plugins
                 ThinkMode = AIThinkMode.Interval;
                 thinkRate = 0.25f;
                 Navigator = GetComponent<BaseNavigator>();
+                // Since the Livestock update NPCPlayer.NavAgent is the prefab's
+                // RustNavMeshAgent, which binds itself to the Recast mesh when
+                // the navigator enables it. The raw Unity agent is driven only
+                // under -useOldNavmesh; enabled with no Unity mesh it only
+                // logs "not on navmesh" errors.
                 _agent = GetComponent<NavMeshAgent>();
-                if (_npc == null || Navigator == null || _agent == null) return;
+                if (_npc == null || Navigator == null || _npc.NavAgent == null)
+                {
+                    Interface.Oxide.LogWarning($"[Rust Quests] Crew brain not initialised: navigator={(Navigator != null)}, nav agent={(_npc != null && _npc.NavAgent != null)}, unity agent={(_agent != null)}.");
+                    return;
+                }
                 // Verified spawn recipe: configure the raw Unity agent while
                 // disabled (raw speed is 0 otherwise), typed to the surface
                 // that answers here, then enable-in-place at a sampled spot.
-                _agent.enabled = false;
+                if (_agent != null) _agent.enabled = false;
                 var typeId = TerrainAgentTypeId(_npc.transform.position);
-                if (typeId != int.MinValue && _npc.NavAgent != null)
+                if (typeId != int.MinValue)
                 {
                     _npc.NavAgent.agentTypeID = typeId;
                     _npc.NavAgent.areaMask = NavMesh.AllAreas;
                 }
-                _agent.speed = 5f;
-                _agent.acceleration = 8f;
-                _agent.angularSpeed = 120f;
+                if (_agent != null)
+                {
+                    _agent.speed = 5f;
+                    _agent.acceleration = 8f;
+                    _agent.angularSpeed = 120f;
+                    _agent.updatePosition = false;  // Navigator.Think copies nextPosition → ServerPosition
+                    _agent.updateRotation = false;
+                }
                 Navigator.MaxWaterDepth = 0.5f;
-                _agent.updatePosition = false;  // Navigator.Think copies nextPosition → ServerPosition
-                _agent.updateRotation = false;
                 NavMeshHit snap;
-                if (NavMesh.SamplePosition(_npc.transform.position, out snap, 6f, NavMesh.AllAreas))
+                if (NavSample(_npc.transform.position, out snap, 6f))
                     _npc.transform.position = snap.position;
-                _agent.enabled = true;
+                if (_agent != null && UnityNavmesh) _agent.enabled = true;
                 Navigator.SetNavMeshEnabled(true);
                 Navigator.PlaceOnNavMesh(0f);
                 _lastMoveTick = UnityEngine.Time.realtimeSinceStartup;
@@ -3642,7 +3681,7 @@ namespace Oxide.Plugins
                 var goal = _npc.transform.position + dir * 80f;
                 goal.y = TerrainMeta.HeightMap.GetHeight(goal);
                 NavMeshHit hit;
-                if (NavMesh.SamplePosition(goal, out hit, 10f, NavMesh.AllAreas))
+                if (NavSample(goal, out hit, 10f))
                     Navigator.SetDestination(hit.position, BaseNavigator.NavigationSpeed.Normal, 0f, 0f);
             }
 
@@ -3758,7 +3797,7 @@ namespace Oxide.Plugins
                 var goal = around + new Vector3(offset.x, 0f, offset.y);
                 goal.y = TerrainMeta.HeightMap.GetHeight(goal);
                 NavMeshHit hit;
-                if (NavMesh.SamplePosition(goal, out hit, 6f, NavMesh.AllAreas))
+                if (NavSample(goal, out hit, 6f))
                     Navigator.SetDestination(hit.position, BaseNavigator.NavigationSpeed.Slow, 0f, 0f);
             }
         }
@@ -3824,11 +3863,44 @@ namespace Oxide.Plugins
                 if (typeId != int.MinValue)
                 {
                     var filter = new NavMeshQueryFilter { agentTypeID = typeId, areaMask = NavMesh.AllAreas };
-                    if (NavMesh.SamplePosition(p, out hit, 6f, filter)) return hit.position;
+                    if (NavSampleTyped(p, out hit, 6f, filter)) return hit.position;
                 }
-                else if (NavMesh.SamplePosition(p, out hit, 6f, NavMesh.AllAreas)) return hit.position;
+                else if (NavSample(p, out hit, 6f)) return hit.position;
             }
             return null;
+        }
+
+        // Dev lever: does the crew's ground search answer here? Spawns
+        // nothing. Reports the live mesh, the prefab's agent wiring and the
+        // spawn-ring hit count around the caller (or the given x z).
+        [ConsoleCommand("rq.crew.navcheck")]
+        private void CmdCrewNavCheck(ConsoleSystem.Arg arg)
+        {
+            if (!Allowed(arg)) return;
+            var center = Vector3.zero;
+            var caller = arg.Player();
+            if (arg.HasArgs(2)) center = new Vector3(arg.GetFloat(0), 0f, arg.GetFloat(1));
+            else if (caller != null) center = caller.transform.position;
+            if (TerrainMeta.HeightMap != null) center.y = TerrainMeta.HeightMap.GetHeight(center);
+            var sb = new StringBuilder();
+            var rn = Rust.Ai.Gen2.Nav.RustNavigation.Instance;
+            sb.AppendLine($"mesh: {(UnityNavmesh ? "Unity (-useOldNavmesh)" : "RustNav")}, built: {(rn != null && rn.IsDefaultNavmeshBuilt())}, unity surfaces: {NavMesh.GetSettingsCount()}, terrain agent type: {TerrainAgentTypeId(center)}");
+            var prefab = GameManager.server.FindPrefab(CrewScientistPrefab);
+            sb.AppendLine($"prefab: navigator={(prefab != null && prefab.GetComponent<BaseNavigator>() != null)}, rust agent={(prefab != null && prefab.GetComponent<Rust.Ai.Gen2.RustNavMeshAgent>() != null)}, unity agent={(prefab != null && prefab.GetComponent<NavMeshAgent>() != null)}");
+            var hits = 0;
+            for (var i = 0; i < 24; i++)
+            {
+                var ang = i * Mathf.PI * 2f / 24f;
+                var p = center + new Vector3(Mathf.Sin(ang) * 45f, 0f, Mathf.Cos(ang) * 45f);
+                p.y = TerrainMeta.HeightMap.GetHeight(p);
+                NavMeshHit hit;
+                if (NavSample(p, out hit, 6f)) hits++;
+            }
+            var spot = CrewSpawnPoint(center, 35f, 55f);
+            sb.AppendLine($"ring at {center:F0}: {hits}/24 samples on mesh; CrewSpawnPoint = {(spot.HasValue ? spot.Value.ToString("F1") : "null")}");
+            var text = sb.ToString().TrimEnd();
+            Puts(text);
+            arg.ReplyWith(text);
         }
 
         // The option this player picked IF it carries a visit.

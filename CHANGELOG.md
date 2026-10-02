@@ -2,6 +2,19 @@
 
 All notable changes to RustQuests. Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versions before the first public release (2.20.3) were internal milestones.
 
+## [2.20.6] — 2026-10-02 — the collections crew finds ground on Facepunch's new navmesh (RustNav)
+
+Facepunch's Livestock update (2026-10-01) made its own Recast navmesh ("RustNav") the server default and stopped baking the Unity navmesh (`-useOldNavmesh` restores it), so every direct `UnityEngine.AI.NavMesh` query answered nothing map-wide. Verified live on the October build before and after this release with a throwaway probe: on 2.20.4 the crew's spawn ring found 0 of 24 candidate points on the Unity mesh (RustNav answered 24 of 24), so every visit night ended in "found no ground — the call is postponed" and the press-expose consequence could never arrive. After the fix `rq.crew.navcheck` returns a real spawn point, and a scientist spawned with the crew's recipe walked a 25 m leg in under 6 s.
+
+### Fixed
+- **The collections crew never spawned on the October build.** Every navmesh query (the spawn ring, the spawn snap, the leave and loiter destinations, the agent-type probe) now goes through Facepunch's `RustNavMeshHelpers`, which dispatches to whichever mesh the server booted with. Agent-typed queries (the Animal and Humanoid bakes) are a Unity-only concept and fall back to the untyped query under RustNav.
+- The raw Unity `NavMeshAgent` on a crew member is enabled only under `-useOldNavmesh`; on the RustNav default it stays off instead of logging "not on navmesh" errors. The brain now requires the prefab's RustNav agent rather than the Unity one, and logs why if it cannot initialise.
+
+### Added
+- `rq.crew.navcheck [x z]` — spawns nothing; reports the live mesh, the scientist prefab's agent wiring, and the spawn-ring hit count around the caller (or the given coordinates) plus the point `CrewSpawnPoint` would pick. Run it where a picker lives before trusting a visit night.
+
+No data-file changes; deploy the .cs and the running wipe is unaffected.
+
 ## [2.20.5] — 2026-09-27 — admin guide
 
 ### Added
