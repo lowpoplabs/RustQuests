@@ -10,7 +10,7 @@ using UnityEngine.AI;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Quests", "LowPopLabs", "2.20.6")]
+    [Info("Rust Quests", "LowPopLabs", "2.20.7")]
     [Description("Story-driven quests: hidden trader shops, lore notes, puzzles and hunting chains that change each wipe.")]
     public class RustQuests : RustPlugin
     {
@@ -6958,6 +6958,8 @@ namespace Oxide.Plugins
             permission.RegisterPermission(_config.AdminPermission, this);
             // Hot/conditional hooks stay unsubscribed until something needs them.
             Unsubscribe(nameof(OnEntityTakeDamage));
+            Unsubscribe(nameof(OnNpcTarget));    // armed only while a trader stands (2.20.7)
+            Unsubscribe(nameof(CanBeTargeted));  // ditto
             Unsubscribe(nameof(OnNpcConversationStart));
             Unsubscribe(nameof(OnEntityDeath));
             Unsubscribe(nameof(OnCodeEntered));
@@ -7402,11 +7404,45 @@ namespace Oxide.Plugins
             return null;
         }
 
+        // NPC AI never picks a trader as a target (2.20.7). Her face seed is a
+        // Steam-range userID (clients derive the face from it), so the usual
+        // "is this a human NPC?" test other plugins run — !userID.IsSteamId() —
+        // calls her a real player, and anything that hunts players (Night
+        // Zombies' scarecrows, Better NPC's custom scientists, Gen2 wolves)
+        // hunts her. Oxide fires OnNpcTarget from AIBrainSenses.GetNearest
+        // (the only path the scarecrow/scientist brains pick targets through —
+        // ScarecrowNPC.GetBestTarget returns null), from BaseNpc.GetWantsToAttack
+        // and from Gen2's SenseComponent.CanTarget (both forwarded here by Oxide);
+        // any non-null return drops her from the candidate list, which also
+        // breaks a chase already in progress. God mode made the hits free; this
+        // stops the swing. Same seam the sibling plugins use (FarmHand,
+        // Scrap4Scrap, PublicWorks, FarmersMarket).
+        private object OnNpcTarget(BaseEntity npc, BaseEntity target)
+        {
+            if ((object)target == null) return null;
+            if (IsTraderEntity(target)) return true;
+            return null;
+        }
+
+        // Player-placed auto turrets, flame turrets, gun traps and the Bradley
+        // ask this before firing on a BasePlayer; false = not a valid target.
+        private object CanBeTargeted(BasePlayer player, MonoBehaviour turret)
+        {
+            if ((object)player == null) return null;
+            if (IsTraderEntity(player)) return false;
+            return null;
+        }
+
         private void RecomputeProtectionHook()
         {
             var anyShop = false;
             foreach (var kv in _state.Shops) if (kv.Value.ShopPlaced) { anyShop = true; break; }
-            var needed = (AnyTraderAlive() && _config.TraderGodMode)
+            // Targeting immunity is unconditional while a trader stands — a shop
+            // keeper being chased around her booth is never the operator's intent.
+            var traderUp = AnyTraderAlive();
+            if (traderUp) { Subscribe(nameof(OnNpcTarget)); Subscribe(nameof(CanBeTargeted)); }
+            else { Unsubscribe(nameof(OnNpcTarget)); Unsubscribe(nameof(CanBeTargeted)); }
+            var needed = (traderUp && _config.TraderGodMode)
                          || (_config.ProtectWorldObjects && (anyShop || _state.Notes.Count > 0 || _state.Stashes.Count > 0 || _state.Drops.Count > 0))
                          || _crewActive.Count > 0; // the visit's damage scale rides the same hook
             if (needed) Subscribe(nameof(OnEntityTakeDamage));

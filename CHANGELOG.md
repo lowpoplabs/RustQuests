@@ -2,6 +2,16 @@
 
 All notable changes to RustQuests. Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versions before the first public release (2.20.3) were internal milestones.
 
+## [2.20.7] — 2026-10-11 — NPC plugins stop hunting the traders
+
+First report from another server: Night Zombies' scarecrows (and Better NPC's custom scientists) chased and attacked the traders in their booths. The traders are god-moded, so the hits did nothing, but the swinging never stopped. Cause: a trader's userID is her face seed, a Steam-range number (clients derive the face from it), so the "is this a human NPC?" test those plugins run — `!userID.IsSteamId()` — calls her a real player and anything that hunts players hunts her.
+
+### Fixed
+- **NPC AI never picks a trader as a target.** RustQuests now answers Oxide's `OnNpcTarget` for its traders (the same seam FarmHand, Scrap4Scrap, PublicWorks and FarmersMarket already use), which removes her from the candidate list in `AIBrainSenses.GetNearest` — the only path the scarecrow and scientist brains pick targets through — and breaks a chase already in progress. Oxide forwards the Gen2 (wolf) and old-gen animal variants of the hook here too.
+- **Turrets and traps leave her alone as well** (`CanBeTargeted` → false): player auto turrets, flame turrets, gun traps and the Bradley no longer fire on a trader.
+
+Both hooks are subscribed only while a trader is standing. No config or data-file changes; deploy the .cs and the running wipe is unaffected. Plugins with their own targeting code that bypass `OnNpcTarget` need their own exemption — Better NPC is being checked next.
+
 ## [2.20.6] — 2026-10-02 — the collections crew finds ground on Facepunch's new navmesh (RustNav)
 
 Facepunch's Livestock update (2026-10-01) made its own Recast navmesh ("RustNav") the server default and stopped baking the Unity navmesh (`-useOldNavmesh` restores it), so every direct `UnityEngine.AI.NavMesh` query answered nothing map-wide. Verified live on the October build before and after this release with a throwaway probe: on 2.20.4 the crew's spawn ring found 0 of 24 candidate points on the Unity mesh (RustNav answered 24 of 24), so every visit night ended in "found no ground — the call is postponed" and the press-expose consequence could never arrive. After the fix `rq.crew.navcheck` returns a real spawn point, and a scientist spawned with the crew's recipe walked a 25 m leg in under 6 s.
