@@ -10,7 +10,7 @@ using UnityEngine.AI;
 
 namespace Oxide.Plugins
 {
-    [Info("Rust Quests", "LowPopLabs", "2.20.7")]
+    [Info("Rust Quests", "LowPopLabs", "2.20.8")]
     [Description("Story-driven quests: hidden trader shops, lore notes, puzzles and hunting chains that change each wipe.")]
     public class RustQuests : RustPlugin
     {
@@ -6960,6 +6960,7 @@ namespace Oxide.Plugins
             Unsubscribe(nameof(OnEntityTakeDamage));
             Unsubscribe(nameof(OnNpcTarget));    // armed only while a trader stands (2.20.7)
             Unsubscribe(nameof(CanBeTargeted));  // ditto
+            Unsubscribe(nameof(OnCustomNpcTarget)); // ditto — NpcSpawn's own veto (2.20.8)
             Unsubscribe(nameof(OnNpcConversationStart));
             Unsubscribe(nameof(OnEntityDeath));
             Unsubscribe(nameof(OnCodeEntered));
@@ -7433,6 +7434,23 @@ namespace Oxide.Plugins
             return null;
         }
 
+        // KpucTaJl's NpcSpawn (the brain behind BetterNpc and the rest of that
+        // family) never reaches OnNpcTarget: its CustomScientistNpc hides
+        // GetBestTarget with a `new` method that walks Brain.Senses.Memory.All
+        // itself, so neither Oxide call site above fires. It asks its own hook
+        // first — OnCustomNpcTarget(CustomScientistNpc npc, BaseCombatEntity
+        // target) — and ONLY a bool answer counts: false = never a target, true
+        // = always, anything else = its own rules, which sort a Steam-range
+        // userID (our face seeds) into the "player" bucket where no ignore list
+        // applies. Verified against NpcSpawn 3.4.8 (2026-10-13). Parameters are
+        // declared as base types so this compiles with or without NpcSpawn.
+        private object OnCustomNpcTarget(BaseEntity npc, BaseEntity target)
+        {
+            if ((object)target == null) return null;
+            if (IsTraderEntity(target)) return false;
+            return null;
+        }
+
         private void RecomputeProtectionHook()
         {
             var anyShop = false;
@@ -7440,8 +7458,8 @@ namespace Oxide.Plugins
             // Targeting immunity is unconditional while a trader stands — a shop
             // keeper being chased around her booth is never the operator's intent.
             var traderUp = AnyTraderAlive();
-            if (traderUp) { Subscribe(nameof(OnNpcTarget)); Subscribe(nameof(CanBeTargeted)); }
-            else { Unsubscribe(nameof(OnNpcTarget)); Unsubscribe(nameof(CanBeTargeted)); }
+            if (traderUp) { Subscribe(nameof(OnNpcTarget)); Subscribe(nameof(CanBeTargeted)); Subscribe(nameof(OnCustomNpcTarget)); }
+            else { Unsubscribe(nameof(OnNpcTarget)); Unsubscribe(nameof(CanBeTargeted)); Unsubscribe(nameof(OnCustomNpcTarget)); }
             var needed = (traderUp && _config.TraderGodMode)
                          || (_config.ProtectWorldObjects && (anyShop || _state.Notes.Count > 0 || _state.Stashes.Count > 0 || _state.Drops.Count > 0))
                          || _crewActive.Count > 0; // the visit's damage scale rides the same hook

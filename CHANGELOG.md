@@ -2,6 +2,13 @@
 
 All notable changes to RustQuests. Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versions before the first public release (2.20.3) were internal milestones.
 
+## [2.20.8] — 2026-10-13 — BetterNpc / NpcSpawn NPCs stop hunting the traders too
+
+2.20.7 covered every NPC that picks targets through the game's own AI senses. KpucTaJl's NpcSpawn (the brain behind BetterNpc, and the rest of that plugin family) does not: its custom scientist replaces the game's best-target method and walks its sense memory itself, so Oxide's `OnNpcTarget` never fires for it, and a trader's Steam-range face seed puts her in its "player" bucket, where none of its ignore lists apply.
+
+### Fixed
+- **NpcSpawn-driven NPCs never pick a trader as a target.** RustQuests answers NpcSpawn's own veto hook, `OnCustomNpcTarget`, with `false` for trader entities (verified against NpcSpawn 3.4.8: only a boolean answer counts, and `false` means never a target). Declared on base types, so the plugin compiles with or without NpcSpawn installed; subscribed only while a trader is standing. No config or data-file changes.
+
 ## [2.20.7] — 2026-10-11 — NPC plugins stop hunting the traders
 
 First report from another server: Night Zombies' scarecrows (and Better NPC's custom scientists) chased and attacked the traders in their booths. The traders are god-moded, so the hits did nothing, but the swinging never stopped. Cause: a trader's userID is her face seed, a Steam-range number (clients derive the face from it), so the "is this a human NPC?" test those plugins run — `!userID.IsSteamId()` — calls her a real player and anything that hunts players hunts her.
