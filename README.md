@@ -176,4 +176,6 @@ MIT — see [LICENSE](LICENSE).
 
 ## Compatibility
 
-- Built against the September 3, 2026 Rust update (build 2633.288). Versions from 2.20.2 onward need that build or newer; the previous version is the last one that compiles on August builds.
+- Built against the October 2026 Rust updates (the October 1 "Livestock" build and the October 9 follow-up). Versions from 2.20.6 onward need the October build or newer, because Facepunch's RustNav navmesh replaced the Unity one; 2.20.5 is the last version for September builds.
+- **Other NPC plugins leave the traders alone (2.20.7 / 2.20.8).** A trader's userID is a Steam-range face seed, so plugins that tell NPCs from players with `userID.IsSteamId()` see her as a player. RustQuests therefore answers the targeting hooks itself: Oxide's `OnNpcTarget` (vanilla scientists, scarecrows such as **Night Zombies**, animals and Gen2 wolves), `CanBeTargeted` (player auto turrets, flame turrets, gun traps, the Bradley), and NpcSpawn's `OnCustomNpcTarget` (**BetterNpc** and every other KpucTaJl plugin that spawns through **NpcSpawn**, which bypasses Oxide's hook). No configuration needed on either side. A plugin with its own targeting code that fires none of these hooks would still need its own exemption; `TraderGodMode` (default on) keeps her unhurt regardless.
+- The collections crew (the Press expose consequence) are ordinary `ScientistNPC`s with non-Steam IDs; other NPC plugins treat them as NPCs under their normal NPC rules.
