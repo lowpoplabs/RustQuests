@@ -2,6 +2,11 @@
 
 All notable changes to RustQuests. Format loosely follows [Keep a Changelog](https://keepachangelog.com/); versions before the first public release (2.20.3) were internal milestones.
 
+## [RustQuestsVoice 1.3.2] — 2026-11-09 — November update compatibility
+
+### Fixed
+- Compiles again on the November 2026 Rust update (build 26498655). The game reworked `FileStorage`: `RemoveAllByEntity` became `RemoveAll`, and `Store` now takes the entity, part, type and data. Each new line still replaces the radio's previous one, so the file database never grows, and the audio is stored in part 0, the same slot the game's own cassettes use. No config or data-file changes; `RustQuests.cs` is unaffected.
+
 ## [2.20.8] — 2026-10-13 — BetterNpc / NpcSpawn NPCs stop hunting the traders too
 
 2.20.7 covered every NPC that picks targets through the game's own AI senses. KpucTaJl's NpcSpawn (the brain behind BetterNpc, and the rest of that plugin family) does not: its custom scientist replaces the game's best-target method and walks its sense memory itself, so Oxide's `OnNpcTarget` never fires for it, and a trader's Steam-range face seed puts her in its "player" bucket, where none of its ignore lists apply.

@@ -11,7 +11,7 @@ By LowPopLabs.
 
 | File | What | Where it goes |
 |---|---|---|
-| `RustQuestsVoice.cs` | The voice plugin (v1.3.1) | `oxide/plugins/` |
+| `RustQuestsVoice.cs` | The voice plugin (v1.3.2) | `oxide/plugins/` |
 | `Oxide.Ext.RustQuestsVoice.dll` | The render engine — an Oxide extension (v0.3.0) | `RustDedicated_Data/Managed/` |
 
 ## Requirements

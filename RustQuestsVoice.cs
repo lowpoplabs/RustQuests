@@ -8,7 +8,7 @@ using Oxide.Ext.RustQuestsVoice;
 
 namespace Oxide.Plugins
 {
-    [Info("RustQuests Voice", "LowPopLabs", "1.3.1")]
+    [Info("RustQuests Voice", "LowPopLabs", "1.3.2")]
     [Description("Optional voice for the RustQuests traders: dialog lines and SLM chat replies rendered by TTS and played from a radio in each shop. Requires Oxide.Ext.RustQuestsVoice.dll in Managed.")]
     public class RustQuestsVoice : RustPlugin
     {
@@ -392,8 +392,8 @@ namespace Oxide.Plugins
 
             rig.StopTimer?.Destroy();
             rig.Box.BoxController.ServerTogglePlay(false);
-            FileStorage.server.RemoveAllByEntity(rig.Cass.net.ID); // one live line per radio — the DB never grows
-            var crc = FileStorage.server.Store(ogg, FileStorage.Type.ogg, rig.Cass.net.ID);
+            FileStorage.server.RemoveAll(rig.Cass.net.ID); // one live line per radio — the DB never grows
+            var crc = FileStorage.server.Store(rig.Cass.net.ID, 0UL, FileStorage.Type.ogg, ogg); // part 0: the slot Cassette itself uses
             rig.Cass.SetAudioId(crc, 0UL);
             rig.PlayingHash = rig.SeqHash;
             var lastChunk = rig.Seq == null || rig.SeqIndex >= rig.Seq.Count - 1;
