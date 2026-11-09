@@ -5,7 +5,7 @@ All notable changes to RustQuests. Format loosely follows [Keep a Changelog](htt
 ## [2.20.9 + RustQuestsVoice 1.3.2] — 2026-11-09 — November update compatibility
 
 ### Fixed
-- Compiles again on the November 2026 Rust update (build 26498655). The game reworked `FileStorage`: `RemoveAllByEntity` became `RemoveAll`, and `Store` now takes the entity, part, type and data. Each new line still replaces the radio's previous one, so the file database never grows, and the audio is stored in part 0, the same slot the game's own cassettes use. No config or data-file changes. `RustQuests.cs` needed no code change; its version moves to 2.20.9 so this fix gets a release of its own.
+- RustQuestsVoice compiles again on the November 2026 Rust update (build 26498655). The game reworked `FileStorage`: `RemoveAllByEntity` became `RemoveAll`, and `Store` now takes the entity, part, type and data. Each new line still replaces the radio's previous one, so the file database never grows, and the audio is stored in part 0, the same slot the game's own cassettes use. No config or data-file changes. `RustQuests.cs` needed no code change; its version moves to 2.20.9 so this fix gets a release of its own.
 
 ## [2.20.8] — 2026-10-13 — BetterNpc / NpcSpawn NPCs stop hunting the traders too
 
